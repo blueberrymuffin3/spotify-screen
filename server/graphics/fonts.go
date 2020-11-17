@@ -14,12 +14,12 @@ import (
 func loadFonts() (face *multiface.Face, err error) {
 	face = new(multiface.Face)
 
-	err = loadTTFFont(face, "NotoSans-Regular.ttf")
+	err = loadTTFFont(face, "fonts/NotoSans-Regular.ttf")
 	if err != nil {
 		return
 	}
 
-	err = loadOTFFont(face, "NotoSansCJKkr-Regular.otf")
+	err = loadOTFFont(face, "fonts/NotoSansCJKkr-Regular.otf")
 	if err != nil {
 		return
 	}
