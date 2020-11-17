@@ -1,0 +1,3 @@
+[submodule "arduino/lib/TFTLCD-Library"]
+	path = arduino/lib/TFTLCD-Library
+	url = https://github.com/bmxguy100/TFTLCD-Library
