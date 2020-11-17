@@ -1,6 +1,8 @@
 package graphics
 
 import (
+	"image"
+
 	"github.com/bmxguy100/spotify-screen/api"
 	"github.com/bmxguy100/spotify-screen/serial"
 	"github.com/fogleman/gg"
@@ -13,6 +15,12 @@ const width = 310
 const height = 240
 
 func FrameGenerator() {
+	var err error
+	spotifyLogo, err = gg.LoadImage("img/spotify_icon.png")
+	if err != nil {
+		log.WithError(err).Fatal("Error loading 'img/spotify_icon.png'")
+	}
+
 	context := gg.NewContext(realWidth, height)
 
 	face, err := loadFonts()
@@ -58,8 +66,10 @@ func drawUnauthenticated(context *gg.Context, url string) {
 	context.DrawStringAnchored(url, width/2, height/2, 0.5, 0.5)
 }
 
+var spotifyLogo image.Image
+
 func drawNothing(context *gg.Context) {
-	
+	context.DrawImageAnchored(spotifyLogo, width/2, height/2, 0.5, 0.5)
 }
 
 func drawAd(context *gg.Context) {
