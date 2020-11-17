@@ -17,7 +17,7 @@ func FrameGenerator() {
 
 	face, err := loadFonts()
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatal("Error loading fonts")
 	}
 
 	context.SetFontFace(face)
@@ -30,7 +30,7 @@ func FrameGenerator() {
 
 		context.Push()
 		if state.Err != nil {
-			log.Error(err)
+			log.WithError(err).Error("Error in API")
 		} else if !state.IsAuthenticated {
 			log.Info("Displaying Unauthenticated")
 			drawUnauthenticated(context, state.AuthUrl)
@@ -48,7 +48,7 @@ func FrameGenerator() {
 
 		err = serial.SendFrame(context.Image())
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err).Fatal("Error sending frame to screen")
 		}
 	}
 }
@@ -59,7 +59,7 @@ func drawUnauthenticated(context *gg.Context, url string) {
 }
 
 func drawNothing(context *gg.Context) {
-
+	
 }
 
 func drawAd(context *gg.Context) {

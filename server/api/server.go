@@ -55,6 +55,6 @@ func httpServer() {
 
 	err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", os.Getenv("PORT")), nil)
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatal("Error starting webserver")
 	}
 }

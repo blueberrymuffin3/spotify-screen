@@ -19,13 +19,13 @@ var albumArtCache = ImageCache{
 	GetImage: func(key string) image.Image {
 		res, err := http.Get(key)
 		if err != nil {
-			log.Error(err)
+			log.WithError(err).Error("Error downloading album art")
 			return nil
 		}
 
 		image, err := jpeg.Decode(res.Body)
 		if err != nil {
-			log.Error(err)
+			log.WithError(err).Error("Error decoding album art")
 			return nil
 		}
 

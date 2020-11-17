@@ -16,7 +16,7 @@ func main() {
 
 	err := serial.InitSerial()
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatal("Error connecting to arduino")
 	}
 	
 	go api.SpotifyServer()
