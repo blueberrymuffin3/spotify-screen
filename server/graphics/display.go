@@ -2,6 +2,7 @@ package graphics
 
 import (
 	"image"
+	"time"
 
 	"github.com/bmxguy100/spotify-screen/api"
 	"github.com/bmxguy100/spotify-screen/serial"
@@ -13,6 +14,7 @@ import (
 const realWidth = 320
 const width = 310
 const height = 240
+const minFrameTime = time.Millisecond * 250
 
 func FrameGenerator() {
 	var err error
@@ -21,35 +23,40 @@ func FrameGenerator() {
 		log.WithError(err).Fatal("Error loading 'img/spotify_icon.png'")
 	}
 
-	context := gg.NewContext(realWidth, height)
-
 	face, err := loadFonts()
 	if err != nil {
 		log.WithError(err).Fatal("Error loading fonts")
 	}
 
-	context.SetFontFace(face)
-
+	nextFrame := time.Now()
 	for {
+		time.Sleep(time.Until(nextFrame))
+		nextFrame = time.Now().Add(minFrameTime)
+
+		context := gg.NewContext(realWidth, height)
+		context.SetFontFace(face)
+
 		context.SetRGB(.3, .3, .3)
 		context.Clear()
 
 		state := <-api.PlaybackStateChannel
 
 		context.Push()
+		context.InvertY()
+		
 		if state.Err != nil {
 			log.WithError(err).Error("Error in API")
 		} else if !state.IsAuthenticated {
-			log.Info("Displaying Unauthenticated")
+			log.Debug("Displaying Unauthenticated")
 			drawUnauthenticated(context, state.AuthUrl)
 		} else if state.State.CurrentlyPlayingType == "ad" {
-			log.Info("Displaying Ad")
+			log.Debug("Displaying Ad")
 			drawAd(context)
 		} else if state.State.Item != nil {
-			log.Info("Displaying Song")
+			log.Debug("Displaying Song")
 			drawSong(context, &state.State)
 		} else {
-			log.Info("Displaying Nothing")
+			log.Debug("Displaying Nothing")
 			drawNothing(context)
 		}
 		context.Pop()

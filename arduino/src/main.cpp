@@ -12,9 +12,9 @@
 
 Adafruit_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, A4);
 
-#define DATA_BUFFER_COLORS 30
+#define DATA_BUFFER_COLORS 127
 #define DATA_BUFFER_BYTES (DATA_BUFFER_COLORS * 2)
-#define TIMEOUT 50
+#define TIMEOUT 250
 
 uint16_t readUInt16();
 
@@ -26,56 +26,64 @@ union _dataBuffer
 
 void setup()
 {
-  Serial.begin(4000000);
+  Serial.begin(1000000);
   Serial.setTimeout(TIMEOUT);
 
   tft.reset();
-  tft.begin(tft.readID());
-  tft.fillScreen(0xFFFF);
+
+  uint16_t id = tft.readID();
+  
+  tft.begin(id);
+  tft.fillScreen(0x8888);
 }
 
 void loop()
 {
-  long start = millis();
-  while (Serial.available() < 8)
-    if (millis() - start >= TIMEOUT){
-      for (uint8_t i = 0; i < 8; i++)
-      {
-        Serial.read();
-      }      
-      return;
+  while (Serial.available() < 8); // Wait for a header
+
+  int32_t x1 = readUInt16();
+  int32_t y1 = readUInt16();
+  int32_t x2 = readUInt16();
+  int32_t y2 = readUInt16();
+
+  if (x1 >= x2 || y1 >= y2 || x1 < 0 || y1 < 0 || x2 > 240 || y2 > 320) // Something is corrupt...
+  {
+    Serial.write('C');
+    delay(2000);
+    while (Serial.available())
+    {
+      Serial.read();
     }
 
-  uint16_t x1 = readUInt16();
-  uint16_t y1 = readUInt16();
-  uint16_t x2 = readUInt16();
-  uint16_t y2 = readUInt16();
+    return;
+  }
 
   tft.setAddrWindow(x1, y1, x2 - 1, y2 - 1);
 
-  long bytesLeft = (long)(x2 - x1) * (long)(y2 - y1) * 2; // Must be able to go negative
+  int32_t bytesLeft = (int32_t)(x2 - x1) * (int32_t)(y2 - y1) * 2; // Must be able to go negative
   bool isFirst = true;
-
-  if (bytesLeft > 153600) // Something is corrupt...
-    return;
 
   while (bytesLeft > 0)
   {
-    long maxLen = bytesLeft;
+    int32_t maxLen = bytesLeft;
     if (maxLen > DATA_BUFFER_BYTES)
       maxLen = DATA_BUFFER_BYTES;
 
-    size_t len = Serial.readBytes(dataBuffer.bytes, DATA_BUFFER_BYTES);
-    // TODO: Should I check it this is odd?
+    int32_t len = Serial.readBytes(dataBuffer.bytes, DATA_BUFFER_BYTES);
 
-    if (len == 0)
-      return; // Timeout
+    if (len == 0) // Timeout
+    {
+      Serial.write('T');
+      return;
+    }
 
     tft.pushColors(dataBuffer.colors, len / 2, isFirst);
 
     bytesLeft -= len;
     isFirst = false;
   }
+
+  Serial.write('O');
 }
 
 uint16_t readUInt16()
