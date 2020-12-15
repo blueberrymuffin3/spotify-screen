@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"path": "arduino"
+		},
+		{
+			"path": "server"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			".prettierrc": "json",
+			"*.mcmeta": "json",
+			"*.bbmodel": "json",
+			"*.qpf": "properties",
+			"*.qsf": "properties",
+			"atomic": "cpp",
+			"*.tcc": "cpp",
+			"bitset": "cpp",
+			"optional": "cpp",
+			"random": "cpp",
+			"fstream": "cpp",
+			"functional": "cpp",
+			"ranges": "cpp",
+			"string_view": "cpp",
+			"tuple": "cpp",
+			"type_traits": "cpp",
+			"valarray": "cpp",
+			"variant": "cpp"
+		}
+	}
+}
