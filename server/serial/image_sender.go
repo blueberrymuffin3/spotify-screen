@@ -6,6 +6,8 @@ import (
 
 	"github.com/tarm/serial"
 
+	"github.com/bmxguy100/spotify-screen/graphics"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -19,59 +21,66 @@ var serialPort *serial.Port
 
 var lastFrame image.Image
 
-func SendFrame(frame image.Image) (err error) {
-	startTime := time.Now()
+func flipY(y int) int {
+	// Yes, this should be imageWidth, not imageHeight
+	return imageWidth - y - 1
+}
 
-	shouldUpdate, updateRegion := getUpdateRegion(lastFrame, frame)
+func FrameSender() {
+	for {
+		frame := <-graphics.FrameChannel
+		startTime := time.Now()
 
-	lastFrame = frame
+		shouldUpdate, updateRegion := getUpdateRegion(lastFrame, frame)
 
-	if !shouldUpdate {
-		log.Debug("Not sending frame, no changes")
-		return
+		lastFrame = frame
+
+		if !shouldUpdate {
+			log.Debug("Not sending frame, no changes")
+			continue
+		}
+
+		buffer := encodeAndRotateImage(frame, updateRegion)
+
+		header := make([]byte, 8)
+
+		x1 := uint16(updateRegion.Min.X)
+		y1 := uint16(updateRegion.Min.Y)
+		x2 := uint16(updateRegion.Max.X)
+		y2 := uint16(updateRegion.Max.Y)
+
+		header[0] = uint8(y1)
+		header[1] = uint8(y1 >> 8)
+		header[2] = uint8(x1)
+		header[3] = uint8(x1 >> 8)
+		header[4] = uint8(y2)
+		header[5] = uint8(y2 >> 8)
+		header[6] = uint8(x2)
+		header[7] = uint8(x2 >> 8)
+
+		_, err := serialPort.Write(header)
+		if err != nil {
+			lastFrame = nil
+			continue
+		}
+		_, err = serialPort.Write(buffer)
+		if err != nil {
+			lastFrame = nil
+			continue
+		}
+
+		isOk, err := confirmSend()
+		if err != nil {
+			log.WithError(err).Error("Error confirming send")
+		}
+		if err != nil || !isOk {
+			lastFrame = nil
+			serialPort.Flush()
+			time.Sleep(3 * time.Second)
+		}
+
+		log.WithField("Time", time.Since(startTime)).WithField("Bytes", len(buffer)).WithField("Region", updateRegion).Debug("Send frame")
 	}
-
-	buffer := encodeAndRotateImage(frame, updateRegion)
-
-	header := make([]byte, 8)
-
-	x1 := uint16(updateRegion.Min.X)
-	y1 := uint16(updateRegion.Min.Y)
-	x2 := uint16(updateRegion.Max.X)
-	y2 := uint16(updateRegion.Max.Y)
-
-	header[0] = uint8(y1)
-	header[1] = uint8(y1 >> 8)
-	header[2] = uint8(x1)
-	header[3] = uint8(x1 >> 8)
-	header[4] = uint8(y2)
-	header[5] = uint8(y2 >> 8)
-	header[6] = uint8(x2)
-	header[7] = uint8(x2 >> 8)
-
-	_, err = serialPort.Write(header)
-	if err != nil {
-		lastFrame = nil
-		return
-	}
-	_, err = serialPort.Write(buffer)
-	if err != nil {
-		lastFrame = nil
-		return
-	}
-
-	isOk, err := confirmSend()
-	if err != nil {
-		log.WithError(err).Error("Error confirming send")
-	}
-	if err != nil || !isOk {
-		lastFrame = nil
-		serialPort.Flush()
-		time.Sleep(3 * time.Second)
-	}
-
-	log.WithField("Time", time.Since(startTime)).WithField("Bytes", len(buffer)).WithField("Region", updateRegion).Debug("Send frame")
-	return
 }
 
 func confirmSend() (isOK bool, err error) {
@@ -144,15 +153,9 @@ func findFirstDifferentPixel(A image.Image, B image.Image, positive bool, isX bo
 				x, y = y, x
 			}
 
-			ar, ag, ab, aa := A.At(x, y).RGBA()
-			br, bg, bb, ba := B.At(x, y).RGBA()
+			ar, ag, ab, aa := A.At(x, flipY(y)).RGBA()
+			br, bg, bb, ba := B.At(x, flipY(y)).RGBA()
 			if ar != br || ag != bg || ab != bb || aa != ba {
-				// log.
-				// 	WithField("A", A.At(x, y)).
-				// 	WithField("B", B.At(x, y)).
-				// 	WithField("pos", image.Point{x, y}).
-				// 	Info("Different Pixel")
-
 				return true, pos
 			}
 		}
@@ -173,8 +176,8 @@ func encodeAndRotateImage(source image.Image, region image.Rectangle) []byte {
 			bufferX := x - region.Min.X
 			bufferY := y - region.Min.Y
 
-			i := (bufferX*region.Dy() + bufferY) * 2 // TODO: Verify logic, look for cause of corruption
-			sr, sg, sb, _ := source.At(x, y).RGBA()
+			i := (bufferX*region.Dy() + bufferY) * 2
+			sr, sg, sb, _ := source.At(x, flipY(y)).RGBA()
 			r := (byte)(sr >> 11)
 			g := (byte)(sg >> 10)
 			b := (byte)(sb >> 11)

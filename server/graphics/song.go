@@ -3,6 +3,7 @@ package graphics
 import (
 	"fmt"
 	"image"
+	"image/draw"
 	"image/jpeg"
 	"net/http"
 	"strings"
@@ -70,7 +71,7 @@ func drawSong(context *gg.Context, playerState *spotify.PlayerState) {
 		context.DrawRectangle(0, 0, albumArtResolution, albumArtResolution)
 		context.Fill()
 	} else {
-		context.DrawImage(albumArt, 0, 0)
+		draw.Draw(context.Image().(draw.Image), image.Rect(0, 0, albumArtResolution, albumArtResolution), albumArt, image.Pt(0, 0), draw.Src)
 	}
 
 	var artistNames = make([]string, len(playerState.Item.Artists))
