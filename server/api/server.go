@@ -29,10 +29,10 @@ func authCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		isAuthenticated = true
-
 		log.Info("Recieved authentication token")
 		client = auth.NewClient(token)
+
+		isAuthenticated = true
 	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
