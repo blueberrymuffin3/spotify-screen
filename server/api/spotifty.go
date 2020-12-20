@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/bmxguy100/spotify"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type PlaybackState struct {
@@ -22,6 +24,8 @@ var cachedState *spotify.PlayerState
 
 func SpotifyServer() {
 	go httpServer()
+
+	log.WithField("URL", baseURL).Info("Please Authenticate")
 
 	for {
 		var state spotify.PlayerState

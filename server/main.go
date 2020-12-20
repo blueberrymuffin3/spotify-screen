@@ -7,7 +7,7 @@ import (
 	"github.com/bmxguy100/spotify-screen/graphics"
 	"github.com/bmxguy100/spotify-screen/serial"
 
-	_ "github.com/joho/godotenv/autoload"
+	_ "github.com/bmxguy100/spotify-screen/files"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -25,6 +25,6 @@ func main() {
 	}
 
 	go api.SpotifyServer()
-
-	graphics.FrameGenerator()
+	go graphics.FrameGenerator()
+	serial.FrameSender()
 }

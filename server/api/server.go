@@ -8,7 +8,7 @@ import (
 	"github.com/bmxguy100/spotify"
 	"github.com/google/uuid"
 
-	_ "github.com/joho/godotenv/autoload"
+	_ "github.com/bmxguy100/spotify-screen/files"
 	log "github.com/sirupsen/logrus"
 )
 

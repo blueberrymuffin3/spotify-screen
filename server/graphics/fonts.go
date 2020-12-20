@@ -2,9 +2,10 @@ package graphics
 
 import (
 	"io/ioutil"
-	
+
 	"github.com/AndreKR/multiface"
 	"github.com/golang/freetype/truetype"
+	"github.com/markbates/pkger"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
 
@@ -14,12 +15,12 @@ import (
 func loadFonts() (face *multiface.Face, err error) {
 	face = new(multiface.Face)
 
-	err = loadTTFFont(face, "fonts/NotoSans-Regular.ttf")
+	err = loadTTFFont(face, pkger.Include("/fonts/NotoSans-Regular.ttf"))
 	if err != nil {
 		return
 	}
 
-	err = loadOTFFont(face, "fonts/NotoSansCJKkr-Regular.otf")
+	err = loadOTFFont(face, pkger.Include("/fonts/NotoSansCJKkr-Regular.otf"))
 	if err != nil {
 		return
 	}
@@ -28,7 +29,12 @@ func loadFonts() (face *multiface.Face, err error) {
 }
 
 func loadTTFFont(mface *multiface.Face, path string) (err error) {
-	data, err := ioutil.ReadFile(path)
+	file, err := pkger.Open(path)
+	if err != nil {
+		return
+	}
+
+	data, err := ioutil.ReadAll(file)
 	if err != nil {
 		return
 	}
@@ -45,7 +51,12 @@ func loadTTFFont(mface *multiface.Face, path string) (err error) {
 }
 
 func loadOTFFont(mface *multiface.Face, path string) (err error) {
-	data, err := ioutil.ReadFile(path)
+	file, err := pkger.Open(path)
+	if err != nil {
+		return
+	}
+
+	data, err := ioutil.ReadAll(file)
 	if err != nil {
 		return
 	}

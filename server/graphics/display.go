@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/bmxguy100/spotify-screen/api"
-	"github.com/bmxguy100/spotify-screen/serial"
 	"github.com/fogleman/gg"
+	"github.com/markbates/pkger"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -14,13 +14,19 @@ import (
 const realWidth = 320
 const width = 310
 const height = 240
-const minFrameTime = time.Millisecond * 250
+const minFrameTime = time.Millisecond * 100
+
+var FrameChannel = make(chan image.Image)
 
 func FrameGenerator() {
 	var err error
-	spotifyLogo, err = gg.LoadImage("img/spotify_icon.png")
+	spotifyLogoFile, err := pkger.Open("/img/spotify_icon.png")
 	if err != nil {
-		log.WithError(err).Fatal("Error loading 'img/spotify_icon.png'")
+		log.WithError(err).Fatal("Error loading '/img/spotify_icon.png'")
+	}
+	spotifyLogo, _, err = image.Decode(spotifyLogoFile)
+	if err != nil {
+		log.WithError(err).Fatal("Error decoding '/img/spotify_icon.png'")
 	}
 
 	face, err := loadFonts()
@@ -42,9 +48,6 @@ func FrameGenerator() {
 
 		state := <-api.PlaybackStateChannel
 
-		context.Push()
-		context.InvertY()
-		
 		if state.Err != nil {
 			log.WithError(err).Error("Error in API")
 		} else if !state.IsAuthenticated {
@@ -60,13 +63,9 @@ func FrameGenerator() {
 			log.Debug("Displaying Nothing")
 			drawNothing(context)
 		}
-		context.Pop()
 		log.WithField("Time", time.Since(startTime)).Debug("Drew frame")
 
-		err = serial.SendFrame(context.Image())
-		if err != nil {
-			log.WithError(err).Fatal("Error sending frame to screen")
-		}
+		FrameChannel <- context.Image()
 	}
 }
 
