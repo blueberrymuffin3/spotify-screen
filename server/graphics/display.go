@@ -31,6 +31,7 @@ func FrameGenerator() {
 	nextFrame := time.Now()
 	for {
 		time.Sleep(time.Until(nextFrame))
+		startTime := time.Now()
 		nextFrame = time.Now().Add(minFrameTime)
 
 		context := gg.NewContext(realWidth, height)
@@ -60,6 +61,7 @@ func FrameGenerator() {
 			drawNothing(context)
 		}
 		context.Pop()
+		log.WithField("Time", time.Since(startTime)).Debug("Drew frame")
 
 		err = serial.SendFrame(context.Image())
 		if err != nil {

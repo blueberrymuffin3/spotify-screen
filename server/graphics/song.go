@@ -17,6 +17,8 @@ import (
 var albumArtCache = ImageCache{
 	GetIfInvalid: false,
 	GetImage: func(key string) image.Image {
+		log.WithField("Key", key).Debug("Cache miss")
+
 		res, err := http.Get(key)
 		if err != nil {
 			log.WithError(err).Error("Error downloading album art")

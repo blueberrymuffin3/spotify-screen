@@ -84,7 +84,7 @@ func confirmSend() (isOK bool, err error) {
 		log.Warn("Timeout on confirmation")
 		return
 	} else if len > 1 {
-		log.WithField("buff", buff[0:len]).Error("Multiple confirmation bytes recieved")
+		log.WithField("Buffer", buff[0:len]).Error("Multiple confirmation bytes recieved")
 		return
 	}
 
@@ -97,7 +97,7 @@ func confirmSend() (isOK bool, err error) {
 		log.Debug("Confirmation Recieved")
 		isOK = true
 	default:
-		log.WithField("byte", buff[0]).Error("Unknown error code")
+		log.WithField("Code", buff[0]).Error("Unknown error code")
 	}
 
 	return
@@ -163,7 +163,7 @@ func findFirstDifferentPixel(A image.Image, B image.Image, positive bool, isX bo
 
 func encodeAndRotateImage(source image.Image, region image.Rectangle) []byte {
 	if region != region.Canon() {
-		log.WithField("region", region).Fatal("Invalid region")
+		log.WithField("Region", region).Fatal("Invalid region")
 	}
 
 	buff := make([]byte, region.Dx()*region.Dy()*2)
@@ -184,7 +184,7 @@ func encodeAndRotateImage(source image.Image, region image.Rectangle) []byte {
 	}
 
 	if len(buff) != region.Size().X*region.Size().Y*2 {
-		log.WithField("len", len(buff)).WithField("region", region).Fatal("invalid buffer size")
+		log.WithField("Length", len(buff)).WithField("Region", region).Fatal("invalid buffer size")
 	}
 
 	return buff
